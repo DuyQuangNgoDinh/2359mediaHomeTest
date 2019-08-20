@@ -1,11 +1,11 @@
 package progtips.vn.asia.domain.entities
 
-import com.google.gson.annotations.SerializedName
+import com.squareup.moshi.Json
 
 data class Movie (
-    @SerializedName("poster_path")
+    @field:Json(name = "poster_path")
     val posterPath: String,
 
-    @SerializedName("vote_average")
+    @field:Json(name = "vote_average")
     val voteAverage: Double
 )

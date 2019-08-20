@@ -38,8 +38,6 @@ class NowPlayingFragment : Fragment() {
         recyclerView.layoutManager = GridLayoutManager(context, 2)
 
         viewModel = ViewModelProviders.of(this).get(NowPlayingViewModel::class.java)
-        viewModel.initRepo(resources)
-        viewModel.getData()
 
         recyclerView.adapter = viewModel.adapter
         super.onStart()
