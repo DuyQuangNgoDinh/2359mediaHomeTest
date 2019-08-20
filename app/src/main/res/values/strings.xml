@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">2359media Home Test</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <!-- Actionbar Titles -->
+    <string name="title_now_playing">Now Playing</string>
 </resources>
