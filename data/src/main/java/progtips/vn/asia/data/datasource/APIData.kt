@@ -18,6 +18,7 @@ class APIData {
     .addCallAdapterFactory(RxJava2CallAdapterFactory.createWithScheduler(Schedulers.io()))
     .build().create(RestApi::class.java)
 
-    fun getNowLoading(): Single<Result> = restApi.getNowPlaying(1)
+    fun getNowLoading(page: Int): Single<Result> = restApi.getNowPlaying(API_KEY,page)
 
+    fun getNowPlaying(page: Int): Result = restApi.getNowPlayingMovies(API_KEY,page)
 }

@@ -10,6 +10,13 @@ interface RestApi {
      * Get the list of books from API
      */
     @GET("now_playing")
-    fun getNowPlaying(@Query("page") page: Int): Single<Result>
+    fun getNowPlaying(@Query("api_key") key: String,
+                      @Query("page") page: Int): Single<Result>
 
+    /**
+     * Get the list of books from API
+     */
+    @GET("now_playing")
+    fun getNowPlayingMovies(@Query("api_key") key: String,
+                      @Query("page") page: Int): Result
 }

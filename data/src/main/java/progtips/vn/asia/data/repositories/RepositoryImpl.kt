@@ -7,7 +7,11 @@ import progtips.vn.asia.domain.repositories.Repository
 
 class RepositoryImpl: Repository {
 
-    override fun getNowPlayingMovies(): Single<Result> {
-        return APIData().getNowLoading()
+    override fun getNowPlayingMovies(page: Int): Single<Result> {
+        return APIData().getNowLoading(page)
+    }
+
+    override fun getNowPlaying(page: Int): Result {
+        return APIData().getNowPlaying(page)
     }
 }

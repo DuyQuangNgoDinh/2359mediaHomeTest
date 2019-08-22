@@ -5,6 +5,7 @@ const val SITE_URL: String = "https://api.themoviedb.org"
 const val VERSION: String = "/3/movie/"
 const val BASE_URL: String = SITE_URL + VERSION
 const val API_KEY: String = "718fc06f977e37ed869a1dae8fcb74c3"
+const val IMG_URL: String = "https://image.tmdb.org/t/p/w185/"
 
 // Constants for database
 const val DB_NAME = "posts"
