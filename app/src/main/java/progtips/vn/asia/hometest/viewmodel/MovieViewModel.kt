@@ -24,6 +24,7 @@ class MovieViewModel(application: Application): AndroidViewModel(application), D
     private val movieDataSourceFactory = MovieDataSourceFactory(this)
     val listLiveData: LiveData<PagedList<Movie>>
 
+    val loadingVisibility: MutableLiveData<Boolean> = MutableLiveData()
     val errorMessage: MutableLiveData<String> = MutableLiveData()
 
     init {
@@ -34,6 +35,8 @@ class MovieViewModel(application: Application): AndroidViewModel(application), D
 
         listLiveData = LivePagedListBuilder(movieDataSourceFactory, pagedListConfig)
             .build()
+
+        loadingVisibility.value = true
     }
 
     override fun requestPageData(page: Int, onResult: (List<Movie>) -> Unit) {
@@ -52,12 +55,13 @@ class MovieViewModel(application: Application): AndroidViewModel(application), D
 //            .doOnTerminate { onRetrievePostListFinish() }
             .subscribe (
                 { result -> onResult(result) },
-                { error -> errorMessage.value = error.message }
+                { error ->  doOnError(error)}
             )
     }
 
     fun retry() {
         errorMessage.value = null
+        loadingVisibility.value = true
         movieDataSourceFactory.getSource()?.retryFailedQuery()
     }
 
@@ -71,4 +75,10 @@ class MovieViewModel(application: Application): AndroidViewModel(application), D
         super.onCleared()
     }
 
+    private fun doOnError(error: Throwable) {
+        errorMessage.value = error.message
+        loadingVisibility.value = false
+    }
+
+    fun isDataEmpty() = listLiveData.value?.isEmpty()?:true
 }

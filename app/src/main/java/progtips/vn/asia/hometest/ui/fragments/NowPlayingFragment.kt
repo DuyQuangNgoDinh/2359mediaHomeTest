@@ -5,13 +5,12 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ProgressBar
-import androidx.annotation.StringRes
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.snackbar.Snackbar
 import progtips.vn.asia.hometest.R
 import progtips.vn.asia.hometest.adapter.MovieAdapter
@@ -25,7 +24,12 @@ import progtips.vn.asia.hometest.viewmodel.MovieViewModel
 class NowPlayingFragment : Fragment() {
     private lateinit var viewModel: MovieViewModel
     private lateinit var recyclerView:RecyclerView
+    private lateinit var progressBar: ProgressBar
+    private lateinit var containerEmpty: LinearLayout
+    private lateinit var errorTextview: TextView
+    private lateinit var retryButton: MaterialButton
     private var errorSnackbar: Snackbar? = null
+    private var errorType = ERROR_TYPE.EMPTY_SCREEN
 
     private var adapter = MovieAdapter()
 
@@ -38,12 +42,23 @@ class NowPlayingFragment : Fragment() {
         (activity as AppCompatActivity).supportActionBar?.title = getString(R.string.title_now_playing)
 
         recyclerView = view.findViewById(R.id.now_playing_recycler)
+        progressBar = view.findViewById(R.id.progress_now_playing)
+        containerEmpty = view.findViewById(R.id.layout_empty)
+        errorTextview = view.findViewById(R.id.tv_error_message)
+        retryButton = view.findViewById(R.id.btn_retry)
+        retryButton.setOnClickListener { viewModel.retry() }
 
         viewModel = ViewModelProviders.of(activity!!).get(MovieViewModel::class.java)
 
         viewModel.listLiveData.observe(this, Observer { adapter.submitList(it) })
         viewModel.errorMessage.observe(this, Observer {
                 errorMessage -> if (errorMessage != null) showError(view, errorMessage) else hideError()
+        })
+        viewModel.loadingVisibility.observe(this, Observer {
+            when(it) {
+                true -> progressBar.visibility = View.VISIBLE
+                false -> progressBar.visibility = View.GONE
+            }
         })
 
         return view
@@ -60,12 +75,28 @@ class NowPlayingFragment : Fragment() {
     }
 
     private fun showError(view: View, errorMessage: String) {
-        errorSnackbar = Snackbar.make(view, errorMessage, Snackbar.LENGTH_INDEFINITE)
-        errorSnackbar?.setAction(R.string.retry) { viewModel.retry() }
-        errorSnackbar?.show()
+        if (viewModel.isDataEmpty()) {
+            containerEmpty.visibility = View.VISIBLE
+            errorTextview.text = errorMessage
+            errorType = ERROR_TYPE.EMPTY_SCREEN
+        }
+        else {
+            errorSnackbar = Snackbar.make(view, errorMessage, Snackbar.LENGTH_INDEFINITE)
+            errorSnackbar?.setAction(R.string.retry) { viewModel.retry() }
+            errorSnackbar?.show()
+            errorType = ERROR_TYPE.SNACKBAR
+        }
     }
 
     private fun hideError() {
-        errorSnackbar?.dismiss()
+        when (errorType) {
+            ERROR_TYPE.SNACKBAR -> errorSnackbar?.dismiss()
+            ERROR_TYPE.EMPTY_SCREEN -> containerEmpty.visibility = View.GONE
+        }
+    }
+
+    enum class ERROR_TYPE {
+        EMPTY_SCREEN,
+        SNACKBAR
     }
 }

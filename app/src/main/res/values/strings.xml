@@ -7,5 +7,7 @@
     <!-- Actionbar Titles -->
     <string name="title_now_playing">Now Playing</string>
     <string name="retry">Retry</string>
+    <string name="empty">No movies</string>
+
 
 </resources>

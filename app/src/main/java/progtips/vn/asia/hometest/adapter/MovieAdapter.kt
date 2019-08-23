@@ -25,8 +25,6 @@ class MovieAdapter: PagedListAdapter<Movie, NowPlayingViewHolder>(DIFF_CALLBACK)
             override fun areItemsTheSame(oldItem: Movie, newItem: Movie) =
                 oldItem.id == newItem.id
 
-            // If you use the "==" operator, make sure that the object implements
-            // .equals(). Alternatively, write custom data comparison logic here.
             override fun areContentsTheSame(
                 oldItem: Movie, newItem: Movie) = oldItem == newItem
         }
