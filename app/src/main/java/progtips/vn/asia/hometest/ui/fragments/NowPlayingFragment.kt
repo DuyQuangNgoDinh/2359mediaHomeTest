@@ -65,7 +65,7 @@ class NowPlayingFragment : Fragment() {
     }
 
     override fun onStart() {
-        recyclerView.layoutManager = GridAutofitLayoutManager(context!!, -1)
+        recyclerView.layoutManager = GridAutofitLayoutManager(context!!)
         recyclerView.adapter = adapter
 
         val smallPadding = resources.getDimensionPixelSize(R.dimen.shr_movie_grid_spacing_small)
