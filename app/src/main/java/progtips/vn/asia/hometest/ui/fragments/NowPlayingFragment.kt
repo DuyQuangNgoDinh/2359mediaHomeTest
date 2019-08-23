@@ -6,11 +6,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import progtips.vn.asia.hometest.R
 import progtips.vn.asia.hometest.adapter.MovieAdapter
 import progtips.vn.asia.hometest.adapter.MovieGridItemDecoration
@@ -23,8 +25,8 @@ import progtips.vn.asia.hometest.viewmodel.MovieViewModel
 class NowPlayingFragment : Fragment() {
     private lateinit var viewModel: MovieViewModel
     private lateinit var recyclerView:RecyclerView
-    private lateinit var progressBar: ProgressBar
-    //private var adapter = NowPlayingAdapter()
+    private var errorSnackbar: Snackbar? = null
+
     private var adapter = MovieAdapter()
 
     override fun onCreateView(
@@ -36,32 +38,34 @@ class NowPlayingFragment : Fragment() {
         (activity as AppCompatActivity).supportActionBar?.title = getString(R.string.title_now_playing)
 
         recyclerView = view.findViewById(R.id.now_playing_recycler)
-        progressBar = view.findViewById(R.id.progress_now_playing)
+
+        viewModel = ViewModelProviders.of(activity!!).get(MovieViewModel::class.java)
+
+        viewModel.listLiveData.observe(this, Observer { adapter.submitList(it) })
+        viewModel.errorMessage.observe(this, Observer {
+                errorMessage -> if (errorMessage != null) showError(view, errorMessage) else hideError()
+        })
 
         return view
     }
 
     override fun onStart() {
         recyclerView.layoutManager = GridAutofitLayoutManager(context!!, -1)
-
-        viewModel = ViewModelProviders.of(this).get(MovieViewModel::class.java)
-        viewModel.progressVisibility.observe(this, Observer {
-            viewModel.progressVisibility.value?.let {
-                when(it) {
-                    true -> progressBar.visibility = View.VISIBLE
-                    false -> progressBar.visibility = View.GONE
-                }
-            }
-        })
-
         recyclerView.adapter = adapter
 
         val smallPadding = resources.getDimensionPixelSize(R.dimen.shr_movie_grid_spacing_small)
         recyclerView.addItemDecoration(MovieGridItemDecoration(smallPadding))
 
-        //viewModel.movies.observe(this, Observer { adapter.updateMovieList(it) })
-        viewModel.listLiveData.observe(this, Observer { adapter.submitList(it) })
         super.onStart()
     }
 
+    private fun showError(view: View, errorMessage: String) {
+        errorSnackbar = Snackbar.make(view, errorMessage, Snackbar.LENGTH_INDEFINITE)
+        errorSnackbar?.setAction(R.string.retry) { viewModel.retry() }
+        errorSnackbar?.show()
+    }
+
+    private fun hideError() {
+        errorSnackbar?.dismiss()
+    }
 }

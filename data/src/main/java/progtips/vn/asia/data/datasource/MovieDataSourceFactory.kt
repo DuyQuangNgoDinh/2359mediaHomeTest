@@ -12,4 +12,6 @@ class MovieDataSourceFactory(private val dataSourceDelegate: DataSourceDelegate<
         sourceLiveData.postValue(latestSource)
         return latestSource
     }
+
+    fun getSource() = sourceLiveData.value
 }

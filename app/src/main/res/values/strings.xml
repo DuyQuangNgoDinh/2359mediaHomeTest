@@ -6,4 +6,6 @@
 
     <!-- Actionbar Titles -->
     <string name="title_now_playing">Now Playing</string>
+    <string name="retry">Retry</string>
+
 </resources>

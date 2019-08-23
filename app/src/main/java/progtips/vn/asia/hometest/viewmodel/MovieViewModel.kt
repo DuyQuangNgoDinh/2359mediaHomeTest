@@ -1,31 +1,32 @@
 package progtips.vn.asia.hometest.viewmodel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import androidx.paging.PagedList
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 import progtips.vn.asia.data.datasource.DataSourceDelegate
 import progtips.vn.asia.data.datasource.MovieDataSourceFactory
 import progtips.vn.asia.data.repositories.RepositoryImpl
 import progtips.vn.asia.domain.entities.Movie
 import progtips.vn.asia.domain.usecases.GetNowPlayingUsecase
 import androidx.paging.LivePagedListBuilder
-import progtips.vn.asia.domain.usecases.GetMovieUsecase
+import com.google.android.material.snackbar.Snackbar
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
+import progtips.vn.asia.domain.status.RequestStatus
 
-class MovieViewModel: ViewModel(), DataSourceDelegate<Movie> {
+class MovieViewModel(application: Application): AndroidViewModel(application), DataSourceDelegate<Movie> {
+    private val usecase = GetNowPlayingUsecase(RepositoryImpl(application.applicationContext))
     private var subscription: Disposable? = null
-    private var repo: RepositoryImpl = RepositoryImpl()
 
-    private var movieDataSourceFactory = MovieDataSourceFactory(this)
-    var listLiveData: LiveData<PagedList<Movie>>
+    private val movieDataSourceFactory = MovieDataSourceFactory(this)
+    val listLiveData: LiveData<PagedList<Movie>>
 
-    val progressVisibility:MutableLiveData<Boolean> = MutableLiveData()
+    val errorMessage: MutableLiveData<String> = MutableLiveData()
 
     init {
-
         val pagedListConfig = PagedList.Config.Builder()
             .setEnablePlaceholders(true)
             .setInitialLoadSizeHint(10)
@@ -33,22 +34,31 @@ class MovieViewModel: ViewModel(), DataSourceDelegate<Movie> {
 
         listLiveData = LivePagedListBuilder(movieDataSourceFactory, pagedListConfig)
             .build()
-
-        progressVisibility.value = false
     }
 
     override fun requestPageData(page: Int, onResult: (List<Movie>) -> Unit) {
-//        progressVisibility.value = true
+        subscription = usecase.execute(page)
+            .map {
+                val movies = mutableListOf<Movie>()
+                for (movie in it.results) {
+                    if (!movie.posterPath.isNullOrEmpty())
+                        movies.add(movie)
+                }
+                movies
+            }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+//            .doOnSubscribe { onRetrievePostListStart() }
+//            .doOnTerminate { onRetrievePostListFinish() }
+            .subscribe (
+                { result -> onResult(result) },
+                { error -> errorMessage.value = error.message }
+            )
+    }
 
-//        subscription = GetNowPlayingUsecase(repo).execute(page)
-//            .subscribeOn(Schedulers.io())
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .subscribe(
-//                { result -> onResult(result.results) },
-//                { error -> progressVisibility.value = false }
-//            )
-
-        GetMovieUsecase(repo).execute(onResult, page)
+    fun retry() {
+        errorMessage.value = null
+        movieDataSourceFactory.getSource()?.retryFailedQuery()
     }
 
     override fun onCleared() {
@@ -60,4 +70,5 @@ class MovieViewModel: ViewModel(), DataSourceDelegate<Movie> {
 
         super.onCleared()
     }
+
 }
