@@ -7,25 +7,31 @@ import androidx.lifecycle.MutableLiveData
 import androidx.paging.PagedList
 import progtips.vn.asia.data.datasource.DataSourceDelegate
 import progtips.vn.asia.data.datasource.MovieDataSourceFactory
-import progtips.vn.asia.data.repositories.RepositoryImpl
 import progtips.vn.asia.domain.entities.Movie
 import progtips.vn.asia.domain.usecases.GetNowPlayingUsecase
 import androidx.paging.LivePagedListBuilder
-import com.google.android.material.snackbar.Snackbar
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
-import progtips.vn.asia.domain.status.RequestStatus
+import progtips.vn.asia.data.injection.module.RepositoryModule
+import progtips.vn.asia.hometest.injector.DaggerViewModelInjector
+
+import javax.inject.Inject
 
 class MovieViewModel(application: Application): AndroidViewModel(application), DataSourceDelegate<Movie> {
-    private val usecase = GetNowPlayingUsecase(RepositoryImpl(application.applicationContext))
+    @Inject
+    lateinit var usecase: GetNowPlayingUsecase
     private var subscription: Disposable? = null
 
     private val movieDataSourceFactory = MovieDataSourceFactory(this)
-    val listLiveData: LiveData<PagedList<Movie>>
 
+    val listLiveData: LiveData<PagedList<Movie>>
     val loadingVisibility: MutableLiveData<Boolean> = MutableLiveData()
     val errorMessage: MutableLiveData<String> = MutableLiveData()
+
+    private var injector = DaggerViewModelInjector.builder()
+        .repositoryModule(RepositoryModule(application.applicationContext))
+        .build()
 
     init {
         val pagedListConfig = PagedList.Config.Builder()
@@ -37,6 +43,8 @@ class MovieViewModel(application: Application): AndroidViewModel(application), D
             .build()
 
         loadingVisibility.value = true
+
+        injector.inject(this)
     }
 
     override fun requestPageData(page: Int, onResult: (List<Movie>) -> Unit) {

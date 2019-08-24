@@ -1,4 +1,4 @@
-package progtips.vn.asia.mvvmposts.injection.module
+package progtips.vn.asia.data.injection.module
 
 import dagger.Module
 import dagger.Provides
