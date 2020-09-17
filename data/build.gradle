@@ -40,12 +40,8 @@ dependencies {
 
     // Retrofit
     implementation "com.squareup.retrofit2:retrofit:$retrofit_version"
-    implementation "com.squareup.retrofit2:adapter-rxjava2:$retrofit_version"
-    implementation "com.squareup.retrofit2:converter-moshi:$retrofit_version"
-
-    // RxJava & RxAndroid
-    api "io.reactivex.rxjava2:rxjava:2.1.15"
-    api "io.reactivex.rxjava2:rxandroid:2.0.2"
+    implementation "com.squareup.retrofit2:converter-gson:$retrofit_version"
+    implementation "com.squareup.okhttp3:logging-interceptor:$okhttpVersion"
 
     // Paging library
     implementation "androidx.paging:paging-runtime-ktx:$paging_version"
@@ -53,5 +49,7 @@ dependencies {
     // Dagger 2
     implementation "com.google.dagger:dagger:$dagger2_version"
     kapt "com.google.dagger:dagger-compiler:$dagger2_version"
-    compileOnly "org.glassfish:javax.annotation:3.1.1"
+
+    // Coroutines
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_version"
 }

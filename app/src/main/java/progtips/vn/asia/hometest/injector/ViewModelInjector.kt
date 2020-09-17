@@ -7,7 +7,7 @@ import progtips.vn.asia.hometest.viewmodel.MovieViewModel
 import javax.inject.Singleton
 
 @Singleton
-@Component(modules = [RepositoryModule::class])
+@Component(modules = [RepositoryModule::class, NetworkModule::class])
 interface ViewModelInjector {
     fun inject(postListViewModel: MovieViewModel)
 }

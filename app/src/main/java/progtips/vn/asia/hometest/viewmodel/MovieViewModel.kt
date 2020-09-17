@@ -4,24 +4,25 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.launch
 import progtips.vn.asia.data.datasource.DataSourceDelegate
 import progtips.vn.asia.data.datasource.MovieDataSourceFactory
 import progtips.vn.asia.domain.entities.Movie
 import progtips.vn.asia.domain.usecases.GetNowPlayingUsecase
-import androidx.paging.LivePagedListBuilder
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
-import progtips.vn.asia.data.injection.module.RepositoryModule
 import progtips.vn.asia.hometest.injector.DaggerViewModelInjector
-
 import javax.inject.Inject
 
 class MovieViewModel(application: Application): AndroidViewModel(application), DataSourceDelegate<Movie> {
     @Inject
     lateinit var usecase: GetNowPlayingUsecase
-    private var subscription: Disposable? = null
 
     private val movieDataSourceFactory = MovieDataSourceFactory(this)
 
@@ -30,7 +31,6 @@ class MovieViewModel(application: Application): AndroidViewModel(application), D
     val errorMessage: MutableLiveData<String> = MutableLiveData()
 
     private var injector = DaggerViewModelInjector.builder()
-        .repositoryModule(RepositoryModule(application.applicationContext))
         .build()
 
     init {
@@ -47,24 +47,37 @@ class MovieViewModel(application: Application): AndroidViewModel(application), D
         injector.inject(this)
     }
 
+    @ExperimentalCoroutinesApi
     override fun requestPageData(page: Int, onResult: (List<Movie>) -> Unit) {
-        subscription = usecase.execute(page)
-            .map {
-                val movies = mutableListOf<Movie>()
-                for (movie in it.results) {
-                    if (!movie.posterPath.isNullOrEmpty())
-                        movies.add(movie)
+//        subscription = usecase.execute(page)
+//            .map {
+//                val movies = mutableListOf<Movie>()
+//                for (movie in it.results) {
+//                    if (!movie.posterPath.isNullOrEmpty())
+//                        movies.add(movie)
+//                }
+//                movies
+//            }
+//            .subscribeOn(Schedulers.io())
+//            .observeOn(AndroidSchedulers.mainThread())
+////            .doOnSubscribe { onRetrievePostListStart() }
+////            .doOnTerminate { onRetrievePostListFinish() }
+//            .subscribe (
+//                { result -> onResult(result) },
+//                { error ->  doOnError(error)}
+//            )
+
+        viewModelScope.launch {
+            usecase.execute(page)
+                .onStart { toggleLoadingVisibility(true) }
+                .onCompletion { toggleLoadingVisibility(false) }
+                .catch {
+                    doOnError(Throwable("Something wrong happen"))
                 }
-                movies
-            }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-//            .doOnSubscribe { onRetrievePostListStart() }
-//            .doOnTerminate { onRetrievePostListFinish() }
-            .subscribe (
-                { result -> onResult(result) },
-                { error ->  doOnError(error)}
-            )
+                .collect {
+                    onResult(it)
+                }
+        }
     }
 
     fun retry() {
@@ -73,14 +86,8 @@ class MovieViewModel(application: Application): AndroidViewModel(application), D
         movieDataSourceFactory.getSource()?.retryFailedQuery()
     }
 
-    override fun onCleared() {
-        subscription?.let {
-            if (!it.isDisposed) {
-                it.dispose()
-            }
-        }
-
-        super.onCleared()
+    private fun toggleLoadingVisibility(switch: Boolean) {
+        loadingVisibility.value = switch
     }
 
     private fun doOnError(error: Throwable) {

@@ -1,8 +1,8 @@
 package progtips.vn.asia.domain.repositories
 
-import io.reactivex.Single
-import progtips.vn.asia.domain.entities.Result
+import kotlinx.coroutines.flow.Flow
+import progtips.vn.asia.domain.entities.Movie
 
 interface Repository {
-    fun getNowPlayingMovies(page: Int): Single<Result>
+    suspend fun getNowPlayingMovies(page: Int): Flow<List<Movie>>
 }

@@ -1,20 +1,26 @@
 package progtips.vn.asia.data.repositories
 
 import android.content.Context
-import io.reactivex.Single
-import progtips.vn.asia.data.R
-import progtips.vn.asia.data.datasource.APIData
-import progtips.vn.asia.data.utils.Helper
-import progtips.vn.asia.domain.entities.Result
+import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.flow.flow
+import progtips.vn.asia.data.restclient.RestApi
 import progtips.vn.asia.domain.repositories.Repository
+import javax.inject.Inject
 
-class RepositoryImpl(private val context: Context): Repository {
-    override fun getNowPlayingMovies(page: Int): Single<Result> {
-        if (Helper.isConnectedToNetwork(context))
-            return APIData().getNowPlaying(page)
+class RepositoryImpl @Inject constructor(
+    private val api: RestApi
+): Repository {
+//    override fun getNowPlayingMovies(page: Int): Single<Result> {
+//        if (Helper.isConnectedToNetwork(context))
+//            return APIData().getNowPlaying(page)
+//
+//        val errorMessage:String = context.getString(R.string.error_no_internet_connection)
+//        return Single.error(Throwable(errorMessage))
+//    }
 
-        val errorMessage:String = context.getString(R.string.error_no_internet_connection)
-        return Single.error(Throwable(errorMessage))
+    @InternalCoroutinesApi
+    override suspend fun getNowPlayingMovies(page: Int) = flow {
+        val nowPlaying = api.getNowPlaying(page)
+        emit(nowPlaying.results)
     }
-
 }

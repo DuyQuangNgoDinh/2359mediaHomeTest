@@ -1,6 +1,6 @@
 package progtips.vn.asia.domain.entities
 
-data class Result (
+data class Result<T> (
     val page: Int,
-    var results: List<Movie>
+    var results: List<T>
 )
